@@ -1,5 +1,5 @@
 from importlib.metadata import version
-__version__ = version("finmetry")
+__version__ = version("finmiti")
 
 
 from . import clients

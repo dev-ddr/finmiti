@@ -9,7 +9,9 @@ class ExecutionModel:
     """
 
     def __init__(self, brokerage_perc: float = 0.0):
-        self.brokerage = 0.0
+        ### brokerage is applied as a multiplier on trade value via (1 + self.brokerage),
+        ### so it must be a fraction (e.g. 0.0003 for 0.03%), not a whole-number percent.
+        self.brokerage = brokerage_perc
 
     def fill_buy_order(self, order: Order, available_cash: float) -> Order:
         total_cost = available_cash * order.value_frac

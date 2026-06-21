@@ -1,0 +1,54 @@
+### Notebooks (private / legacy)
+*.ipynb
+**/.ipynb_checkpoints/
+
+### mkdocs params
+site/
+# mkdocs.yml
+
+### bigdata
+data/
+
+### Build artifacts
+build/
+dist/
+*.egg-info/
+*.egg
+
+### Python cache
+__pycache__/
+*.py[cod]
+*.so
+*~
+
+### Testing / tooling
+.tox/
+.cache/
+
+### Virtual environments
+.venv/
+
+### VS Code (project settings allowed)
+# .vscode/settings.local.json
+# .vscode/launch.json
+
+### Configs (structure only)
+configs/*
+!configs/.gitkeep
+!configs/*.example
+
+### Runtime / experiment data
+data/*
+!data/.gitkeep
+
+envs/*
+!envs/.gitkeep
+
+mlflow_experiments/*
+!mlflow_experiments/.gitkeep
+
+
+### projects
+projects/*
+!projects/000_strategy_ema
+!projects/downloading_historical_data

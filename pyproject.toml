@@ -1,0 +1,74 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "finmiti"
+version = "0.0.1"
+description = "Persnal project for stock market data analysis"
+readme = "README.md"
+requires-python = ">=3.12"
+
+authors = [
+  { name = "Darshan Rathod", email = "darshan.rathod1994@gmail.com" }
+]
+
+maintainers = [
+  { name = "Darshan Rathod", email = "darshan.rathod1994@gmail.com" }
+]
+
+license = { text = "MIT" }
+
+keywords = ["finance", "stock-market", "quant", "research", "personal"]
+
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python :: 3.12",
+  "Operating System :: OS Independent",
+]
+
+dependencies = [
+  "numpy==2.3.5",
+  "pandas==2.3.3",
+  "pyyaml==6.0.3",
+  "duckdb==1.4.2",
+  "pyarrow==22.0.0",
+  "py5paisa==0.7.21.2",
+  "pydantic",
+]
+
+[project.optional-dependencies]
+# dev = ["pytest", "pytest-cov", "ruff", "jupyter", "notebook"]
+# docs = ["sphinx", "mkdocs", "nbconvert"]
+# viz = ["matplotlib", "plotly"]
+dev = [
+"pytest", "ruff", "jupyter", "notebook", 
+"sphinx", "mkdocs", "mkdocs-material", "mkdocstrings[python]", "nbconvert", 
+"matplotlib", "plotly"
+]
+
+[project.urls]
+Homepage = "https://dev-ddr.github.io/finmiti/"
+Repository = "https://github.com/dev-ddr/finmiti"
+Issues = "https://github.com/dev-ddr/finmiti/issues"
+
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+# This is crucial for telling setuptools where your actual source code is.
+# It tells setuptools to find packages within the 'src' directory.
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = ["tests*", "legacy*", "experimental*"]
+
+
+[tool.ruff]
+line-length = 310
+select = ["E", "F", "I"]  # Errors, pyflakes, imports
+ignore = ["E501"]  # Disable long-line check (black handles it)
+src = ["src"]
+
+[tool.ruff.format]
+quote-style = "double"
+

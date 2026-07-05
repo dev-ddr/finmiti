@@ -31,7 +31,7 @@ class ScripMaster:
             filepath to .csv file. If filepath is given then it reads the file, else it will download the file. by default None
         """
         if filepath is not None:
-            self.data = pd.read_pickle(filepath)
+            self.data = pd.read_csv(filepath)
         else:
             self.data = pd.read_csv("https://images.5paisa.com/website/scripmaster-csv-format.csv")
 
@@ -51,14 +51,14 @@ class ScripMaster:
         Parameters
         ----------
         filepath : str
-            filepath with filename with .pkl extention
+            filepath with filename with .csv extension
 
         Returns
         -------
         _type_
             None
         """
-        return self.data.to_pickle(filepath)
+        return self.data.to_csv(filepath, index=False)
 
     def get_scrip(self, stock: Stock) -> pd.DataFrame:
         """returns the scrips of the stock

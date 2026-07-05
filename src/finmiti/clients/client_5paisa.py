@@ -134,19 +134,6 @@ class Client5paisa(p5.FivePaisaClient):
             A dataframe containing a historical data.
 
         """
-        # scrip = self.scrip_master.get_scrip(stock)
-
-        # if isinstance(start, dtm.datetime):
-        #     start = start.strftime("%Y-%m-%d")
-        # if isinstance(end, dtm.datetime):
-        #     end = end.strftime("%Y-%m-%d")
-
-        # df = self.historical_data(stock.exchange, stock.exchange_type, scrip.loc[stock.symbol, "Scripcode"], interval.value, start, end)
-        # df.columns = ["Datetime", "Open", "High", "Low", "Close", "Volume"]
-        # df["Datetime"] = pd.to_datetime(df["Datetime"])
-        # df = df.set_index("Datetime")
-
-        # return df
 
         scrip = self.scrip_master.get_scrip(stock)
         if isinstance(start, str):

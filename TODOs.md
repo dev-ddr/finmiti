@@ -1,0 +1,1 @@
+- Make a functionality in finmiti package to get structured result of an experiment. Currently the backtest run only stores orders and portfolio. We need results like profit percentage, drawdown, final amount, standard deviation, CAGR, shapre ratio etc. (add as many things as possible which can give better insights into performance) from order-book and experiments.

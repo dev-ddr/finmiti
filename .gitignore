@@ -56,3 +56,7 @@ mlflow_experiments/*
 projects/*
 !projects/000_strategy_ema
 !projects/downloading_historical_data
+
+
+tests/
+temporary_folder/

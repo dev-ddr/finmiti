@@ -1,9 +1,11 @@
 import numpy as np
 import pandas as pd
 
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 
 from .stock import Stock
+from ..constants import INTERVAL
 import duckdb
 
 
@@ -107,3 +109,73 @@ class StockDict:
                 self.remove(symbol)
 
         return
+
+    def update_hist_data(
+        self,
+        client,
+        local_data_foldpath: str,
+        interval: INTERVAL = INTERVAL.one_day,
+        end=None,
+        default_start: str = "2017-01-01",
+        overwrite: bool = False,
+        start=None,
+        max_workers: int = 5,
+        print_info: bool = True,
+    ) -> None:
+        """Brings every stock up to ``end`` by calling ``Stock.update_hist_data`` in parallel.
+
+        Each thread writes only its own stock's files and manifest, so there is no shared
+        lock. Errors on individual stocks are caught and reported, not raised. ``overwrite``
+        and ``start`` are forwarded to enable fresh (re)downloads.
+        """
+
+        def _update(stock: Stock):
+            try:
+                if print_info:
+                    print(f"[{stock.symbol}] Updating historical data...")
+                stock.update_hist_data(
+                    client, local_data_foldpath, interval=interval, end=end,
+                    default_start=default_start, overwrite=overwrite, start=start,
+                )
+                if print_info:
+                    print(f"[{stock.symbol}] Update complete.")
+            except Exception as e:
+                print(f"[{stock.symbol}] Error updating data:\n{e}")
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            list(executor.map(_update, list(self.stockdict.values())))
+        return
+
+    def coverage(self, local_data_foldpath: str, interval: INTERVAL = None) -> pd.DataFrame:
+        """Returns a cross-stock coverage/freshness table.
+
+        One row per (symbol, interval) with columns: symbol, exchange, exchange_type,
+        interval, start, end, rows, last_downloaded, last_checked, is_stale.
+        """
+        records = []
+        for stock in self.stockdict.values():
+            records.extend(stock.coverage(local_data_foldpath, interval=interval))
+        cols = [
+            "symbol", "exchange", "exchange_type", "interval",
+            "start", "end", "rows", "last_downloaded", "last_checked", "is_stale",
+        ]
+        return pd.DataFrame(records, columns=cols)
+
+    @classmethod
+    def from_disk(cls, local_data_foldpath: str) -> "StockDict":
+        """Builds a StockDict from every stock folder present under ``local_data_foldpath``.
+
+        Lets you inspect everything already on disk - even stocks you did not add manually -
+        e.g. ``StockDict.from_disk(root).coverage(root)``.
+        """
+        sd = cls()
+        root = Path(local_data_foldpath)
+        if not root.exists():
+            return sd
+        for folder in sorted(root.iterdir()):
+            if not folder.is_dir():
+                continue
+            stock = Stock.from_folder(folder)
+            if stock is not None:
+                sd.add(stock)
+        return sd

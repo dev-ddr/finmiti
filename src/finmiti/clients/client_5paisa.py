@@ -31,11 +31,13 @@ class ScripMaster:
             filepath to .csv file. If filepath is given then it reads the file, else it will download the file. by default None
         """
         if filepath is not None:
-            self.data = pd.read_csv(filepath)
+            print("Reading the scrip-master from the provided filepath")
+            self.data = pd.read_pickle(filepath)
         else:
+            print("downloading the scrip-master")
             self.data = pd.read_csv("https://images.5paisa.com/website/scripmaster-csv-format.csv")
 
-        self.data["Expiry"] = pd.to_datetime(self.data["Expiry"], format="mixed")
+        self.data["Expiry"] = pd.to_datetime(self.data["Expiry"], format="%Y-%m-%d %H:%M:%S")
         self.data["Name"] = self.data["Name"].apply(str.upper)
         self.data["Symbol"] = self.data["Name"]
 
@@ -51,14 +53,14 @@ class ScripMaster:
         Parameters
         ----------
         filepath : str
-            filepath with filename with .csv extension
+            filepath with filename with .pkl extention
 
         Returns
         -------
         _type_
             None
         """
-        return self.data.to_csv(filepath, index=False)
+        return self.data.to_pickle(filepath)
 
     def get_scrip(self, stock: Stock) -> pd.DataFrame:
         """returns the scrips of the stock
@@ -102,9 +104,6 @@ class Client5paisa(p5.FivePaisaClient):
     def __init__(self, totp: str, mpin: str, client_code: str, cred: Client5paisaCred, scrip_master: ScripMaster = None, **kwargs):
         super().__init__(cred=cred)
         self.get_totp_session(client_code, f"{totp}", mpin)
-
-        print("downloading the scrip-master")
-
         self.scrip_master = ScripMaster() if scrip_master is None else scrip_master
         return
 

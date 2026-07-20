@@ -35,6 +35,7 @@ dependencies = [
   "pyarrow==22.0.0",
   "py5paisa==0.7.21.2",
   "pydantic",
+  "psycopg[binary]",
 ]
 
 [project.optional-dependencies]

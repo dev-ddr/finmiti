@@ -1,12 +1,9 @@
-import numpy as np
 import pandas as pd
 
-from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 
 from .stock import Stock
 from ..constants import INTERVAL
-import duckdb
 
 
 class StockDict:
@@ -63,16 +60,6 @@ class StockDict:
     @property
     def stocklist(self) -> list[Stock]:
         return list(self.stockdict.values())
-
-    def load_multiple_stocks(self, symbols: list[str], *args, **kwargs) -> None:
-        """Loads multiple stocks using their symbols and adds them to the stockdict."""
-        for symbol in symbols:
-            try:
-                stock = Stock(symbol, *args, **kwargs)
-                self.add(stock)
-            except Exception as e:
-                print(f"[{symbol}] Error loading stock:\n{e}")
-        return
 
     def apply(self, method_name: str, *args, **kwargs) -> dict[str, any]:
         """Applies a method to all Stock objects and returns a dict of results."""
@@ -160,22 +147,3 @@ class StockDict:
             "start", "end", "rows", "last_downloaded", "last_checked", "is_stale",
         ]
         return pd.DataFrame(records, columns=cols)
-
-    @classmethod
-    def from_disk(cls, local_data_foldpath: str) -> "StockDict":
-        """Builds a StockDict from every stock folder present under ``local_data_foldpath``.
-
-        Lets you inspect everything already on disk - even stocks you did not add manually -
-        e.g. ``StockDict.from_disk(root).coverage(root)``.
-        """
-        sd = cls()
-        root = Path(local_data_foldpath)
-        if not root.exists():
-            return sd
-        for folder in sorted(root.iterdir()):
-            if not folder.is_dir():
-                continue
-            stock = Stock.from_folder(folder)
-            if stock is not None:
-                sd.add(stock)
-        return sd

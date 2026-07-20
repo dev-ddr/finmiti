@@ -3,7 +3,7 @@ __version__ = version("finmiti")
 
 
 from . import clients
-from .stocks_handler import Stock, StockDict
+from .stocks_handler import Stock, StockDDB, StockPG, StockDict
 from . import constants
 from .strategy_handler import StrategyBase, StgDataLoader
 from .portfolio_handler import Portfolio, Account

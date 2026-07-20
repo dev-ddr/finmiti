@@ -75,9 +75,11 @@ class ScripMaster:
         pd.DataFrame
             Scrip data of a given stock
         """
+        ### `_scrip` is a private cache poked onto the stock object by this class only -
+        ### Stock itself has no notion of it, it's 5paisa-specific scrip-master lookup data.
         try:
-            return stock.scrip
-        except:
+            return stock._scrip
+        except AttributeError:
             pass
         d1 = self.data
         f1 = (d1["Exch"] == stock.exchange) & (d1["ExchType"] == stock.exchange_type) & (d1["Symbol"] == stock.symbol)
@@ -86,8 +88,7 @@ class ScripMaster:
         if d2.empty:
             raise ValueError(f"No Scrip found for {stock.symbol} in scrip_master")
         d2 = d2.set_index("Name")
-        ### setting the scrip to stock object
-        stock.scrip = d2
+        stock._scrip = d2
         return d2
 
 
@@ -153,15 +154,22 @@ class Client5paisa(p5.FivePaisaClient):
             df["Datetime"] = pd.to_datetime(df["Datetime"])
             return df.set_index("Datetime")
 
+        if start_dt > end_dt:
+            return pd.DataFrame()
+
         dfs = []
         curr_start = start_dt
 
-        while curr_start < end_dt:
+        ### fetch-then-check (not while curr_start < end_dt): a same-day request has
+        ### start_dt == end_dt, which must still issue exactly one chunk call.
+        while True:
             curr_end = min(curr_start + dtm.timedelta(days=90), end_dt)
             chunk = _fetch_chunk(curr_start, curr_end)
             if not chunk.empty:
                 dfs.append(chunk)
 
+            if curr_end >= end_dt:
+                break
             curr_start = curr_end
 
         if not dfs:

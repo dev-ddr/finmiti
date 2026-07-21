@@ -36,6 +36,7 @@ dependencies = [
   "py5paisa==0.7.21.2",
   "pydantic",
   "psycopg[binary]",
+  "plotly",
 ]
 
 [project.optional-dependencies]
@@ -43,9 +44,9 @@ dependencies = [
 # docs = ["sphinx", "mkdocs", "nbconvert"]
 # viz = ["matplotlib", "plotly"]
 dev = [
-"pytest", "ruff", "jupyter", "notebook", 
-"sphinx", "mkdocs", "mkdocs-material", "mkdocstrings[python]", "nbconvert", 
-"matplotlib", "plotly"
+"pytest", "ruff", "jupyter", "notebook",
+"sphinx", "mkdocs", "mkdocs-material", "mkdocstrings[python]", "nbconvert",
+"matplotlib"
 ]
 
 [project.urls]

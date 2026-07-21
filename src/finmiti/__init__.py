@@ -8,5 +8,6 @@ from . import constants
 from .strategy_handler import StrategyBase, StgDataLoader
 from .portfolio_handler import Portfolio, Account
 from .backtest_handler import Backtester
+from .report_handler import BacktestOutput, BacktestReport, BacktestComparison
 
 from .utils import *

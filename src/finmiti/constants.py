@@ -55,6 +55,8 @@ class Order:
     total_cost: float = None
     ### the account id is for isolating the cash.
     account_idx: int = 0
+    ### if True and this symbol is already held in this account, the order is dropped before fill (never enters order_book).
+    skip_if_held: bool = False
 
     def __post_init__(self):
         if self.id is None:

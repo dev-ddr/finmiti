@@ -125,6 +125,10 @@ class Account:
         return
 
     def on_order(self, order: Order) -> None:
+        if order.skip_if_held:
+            if any(holding["symbol"] == order.symbol for holding in self.holdings.values()):
+                return
+
         order = self.executioner.fill_order(available_cash=self.cash, order=order)
 
         qty = order.fill_qty

@@ -252,16 +252,23 @@ class StockPG(Stock):
             df = df[df.index.weekday < 5]
         return df
 
-    def coverage(self, interval: Optional[INTERVAL] = None) -> list:
-        """Returns live coverage records (start/end/rows) for this stock, one per interval.
+    def coverage(self, interval: Optional[INTERVAL] = None, include_count: bool = True) -> list:
+        """Returns live coverage records (start/end, optionally rows) for this stock, one per interval.
 
-        Computed directly from the tables (MIN/MAX/COUNT) rather than cached, since
-        that's already a cheap indexed lookup on the (stock_id, date) primary key.
+        ``start``/``end`` are MIN/MAX on the ``(stock_id, date)`` primary key — an index
+        lookup, cheap regardless of table size. ``count(*)`` is not: Postgres has no
+        index-only shortcut for it (MVCC visibility means every matching row still
+        has to be checked), so it scans the full per-stock row range. Pass
+        ``include_count=False`` to skip it — e.g. a cross-stock coverage listing, or
+        ``update_hist_data``'s internal resume-point check, where only ``end`` matters.
 
         Parameters
         ----------
         interval : INTERVAL, optional
             Restrict to one interval. Defaults to both stored intervals (one_day, one_min).
+        include_count : bool
+            Whether to also compute ``count(*)`` (``rows``). Default True for
+            backward compatibility; ``rows`` is ``None`` when False.
         """
         intervals = [interval] if interval is not None else [INTERVAL.one_day, INTERVAL.one_min]
         stock_id = self.stock_id
@@ -270,11 +277,19 @@ class StockPG(Stock):
             with conn.cursor() as cur:
                 for iv in intervals:
                     table, date_col = _table_and_col(iv)
-                    cur.execute(
-                        f"SELECT min({date_col}), max({date_col}), count(*) FROM {table} WHERE stock_id = %s",
-                        (stock_id,),
-                    )
-                    start, end, rows = cur.fetchone()
+                    if include_count:
+                        cur.execute(
+                            f"SELECT min({date_col}), max({date_col}), count(*) FROM {table} WHERE stock_id = %s",
+                            (stock_id,),
+                        )
+                        start, end, rows = cur.fetchone()
+                    else:
+                        cur.execute(
+                            f"SELECT min({date_col}), max({date_col}) FROM {table} WHERE stock_id = %s",
+                            (stock_id,),
+                        )
+                        start, end = cur.fetchone()
+                        rows = None
                     records.append(
                         {
                             "symbol": self.symbol,
@@ -303,6 +318,12 @@ class StockPG(Stock):
         when nothing is stored yet), downloads the gap, and upserts it. Safe to call
         repeatedly: the upsert is authoritative-overwrite, so re-running with the same
         ``end`` just re-writes the same rows.
+
+        If ``end`` resolves to **today**, the "nothing new to fetch" short-circuit below is
+        skipped even when coverage already reaches today — today's bar can still be
+        incomplete/changing, so every call re-fetches and re-upserts it. This makes the
+        function safe to poll repeatedly through a live trading session to keep an
+        intraday-developing bar current, not just to catch up historical gaps.
 
         Parameters
         ----------
@@ -336,13 +357,14 @@ class StockPG(Stock):
         if overwrite:
             resume_dt = _parse_date(start if start is not None else default_start)
         else:
-            cov = self.coverage(interval=interval)[0]
+            cov = self.coverage(interval=interval, include_count=False)[0]
             if cov["end"] is not None:
                 resume_dt = _parse_date(cov["end"])
             else:
                 resume_dt = _parse_date(start if start is not None else default_start)
 
-        if not overwrite and resume_dt.date() >= end_dt.date():
+        end_is_today = end_dt.date() == _dtm.date.today()
+        if not overwrite and not end_is_today and resume_dt.date() >= end_dt.date():
             return None
 
         df = client.download_historical_data(self, interval=interval, start=resume_dt, end=end_dt)
